@@ -1,0 +1,602 @@
+{
+  "name": "Multi-Agent AI System Gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "responseMode": "responseNodes"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1536,
+        576
+      ],
+      "id": "0f8374e7-9e18-4dc9-aa6a-8a1b6e1f45ce",
+      "name": "When chat message received",
+      "webhookId": "cb1b3230-6b4b-4f35-a1b5-d08e6f7108f1",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -1216,
+        784
+      ],
+      "id": "31bd1c76-287f-4f04-ae8b-fbb418012167",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1184,
+        576
+      ],
+      "id": "b9b2af00-afc5-4dea-a912-bed819eb7830",
+      "name": "GateKeeper"
+    },
+    {
+      "parameters": {
+        "message": "I’m unable to assist with this request.\n\nI can support queries related to the Google Calendar Agent, Forex Agent, Weather Agent, or Secretary Agent. Please rephrase your request within one of these topics.",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        816
+      ],
+      "id": "d7ddcf76-56ef-4354-b829-3630f62aee7d",
+      "name": "Respond to Chat",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -544,
+        896
+      ],
+      "id": "b397077d-d26f-45a3-ad30-007d2853d021",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -640,
+        560
+      ],
+      "id": "2487cda9-5935-41c7-97c8-db13b075350d",
+      "name": "ManagerAgent"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1514fded-b2ea-4bc5-bde4-7cb04c387fce",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "SAFE",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -864,
+        576
+      ],
+      "id": "6485a0c4-78cb-4f33-a4af-813aa37dc19d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "Secretary Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "befa43f1-7fd2-4564-b7c2-1610a9e4e2dd"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "67e5f5bf-7cbc-44d7-b0dd-6b36fd8eeb72",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "Google Calendar Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3c46702c-8161-43d8-84b7-8ebfbb133b12",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "Weather Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8850fb1f-29b4-45d7-a33b-15e29555a80a",
+                    "leftValue": "={{ $json.output }}",
+                    "rightValue": "Forex Agent",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        528
+      ],
+      "id": "58127bc7-9226-4474-8cfe-b2d1ba2b4074",
+      "name": "Switch"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        96,
+        256
+      ],
+      "id": "5c599795-752e-4ba8-92f3-e832e0d19338",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8ac3e672-11d5-4894-890e-5fd22f42dd46",
+      "name": "Secretary Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        592
+      ],
+      "id": "28de4db8-1254-4850-9beb-224b809208ba",
+      "name": "Simple Memory3"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        384
+      ],
+      "id": "898b14c3-6b4d-4b49-b224-e7a6db47ab53",
+      "name": "Google Calendar Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        1344
+      ],
+      "id": "61e99d22-61e7-4ecf-830a-0b6cf19375d3",
+      "name": "Simple Memory4"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        1136
+      ],
+      "id": "30f5152c-ca0d-42f7-9ba5-850f8bdfdfea",
+      "name": "Forex Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        112,
+        976
+      ],
+      "id": "a58d45e3-12c5-48d9-9daa-541a6c1cd73a",
+      "name": "Simple Memory5"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        16,
+        768
+      ],
+      "id": "69b15102-0181-4d9b-bae2-d6c619a2e4ce",
+      "name": "Weather Agent"
+    },
+    {
+      "parameters": {
+        "cityName": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('City', ``, 'string') }}",
+        "language": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Language', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.openWeatherMapTool",
+      "typeVersion": 1,
+      "position": [
+        240,
+        976
+      ],
+      "id": "72eb84e6-63e2-4b40-803e-d39d8903380a",
+      "name": "OpenWeatherMap"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1040,
+        768
+      ],
+      "id": "8d7b7198-b5fb-4470-9012-3652e576010c",
+      "name": "Simple Memory6"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1040,
+        496
+      ],
+      "id": "938c86a6-b5a4-4030-a0dd-b668b1298151",
+      "name": "LLM Consolidator Agent"
+    },
+    {
+      "parameters": {
+        "url": "https://v6.exchangerate-api.com/v6/e488cfa89e173733bef8af20/latest/USD",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        224,
+        1392
+      ],
+      "id": "1d975700-6f49-482e-afe6-a87663af6b35",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        464
+      ],
+      "id": "76e3742c-50f9-49e2-99e5-d460f8d21fc1",
+      "name": "MergeNote"
+    },
+    {
+      "parameters": {
+        "message": "={{ $json.output }}",
+        "waitUserReply": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chat",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        496
+      ],
+      "id": "af6c47eb-c0ae-438f-89aa-5cca4f7e0f0c",
+      "name": "Respond to Chat2",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "sendTo": "a.pandeyj28@gmail.com",
+        "subject": "Alert! Update from Agent",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1712,
+        496
+      ],
+      "id": "0fb24995-2651-4fa9-8913-0f4a1cea3268",
+      "name": "Send a message",
+      "webhookId": "91a40b87-d078-4462-ab75-9f5d92964152"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "classroom111643650926214875920@group.calendar.google.com",
+          "mode": "list",
+          "cachedResultName": "S6"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        592
+      ],
+      "id": "d0151414-8b0d-4af2-be7f-54df9155109e",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "R5uPmpMwEbnjhFsF",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1328,
+        784
+      ],
+      "id": "c95056ef-b096-4668-b485-c42a8784122f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "2e3mcfNouae8whLP",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        768
+      ],
+      "id": "4c9097a6-3191-4fe2-82fd-ee6f4f7c2e29",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "XX0tS2INXUPQWEls",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        592
+      ],
+      "id": "34a05d27-64b6-4591-83aa-b623390a6e11",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "2e3mcfNouae8whLP",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        208
+      ],
+      "id": "dad82f91-e397-46c5-b167-de75a1a71ed3",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "XX0tS2INXUPQWEls",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        960
+      ],
+      "id": "7eab3c8e-5c65-450f-8453-ab94826ec03d",
+      "name": "Google Gemini Chat Model4",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "2e3mcfNouae8whLP",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        1360
+      ],
+      "id": "65ca8cd1-5a8c-405e-9190-da6d295e076d",
+      "name": "Google Gemini Chat Model5",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "2e3mcfNouae8whLP",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        912,
+        704
+      ],
+      "id": "140ebf27-a86b-4bef-aebe-c901401252b6",
+      "name": "Google Gemini Chat Model6",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "2e3mcfNouae8whLP",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Respond to Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Chat2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "30771efe-fbcc-4cff-8c7b-7f611f20dedc",
+  "meta": {
+    "instanceId": "8b6aca990721a7b0b4a7e4dccdc94bbad2a12ebc2fd6b0c215b4a5dd678afd36"
+  },
+  "id": "otCl1Dd7Kp1iAdg1",
+  "tags": []
+}
