@@ -1,0 +1,578 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 30,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "feedUrl": "https://www.cnbc.com/id/100727362/device/rss/rss.html"
+      },
+      "type": "n8n-nodes-base.rssFeedReadTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        32
+      ],
+      "id": "081404a5-4d06-4b16-b8f9-f040cf4de448",
+      "name": "RSS Feed Trigger"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemma-3-4b-it",
+          "mode": "list",
+          "cachedResultName": "models/gemma-3-4b-it"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Summarize the following market update in 3–4 concise sentences.\n\nClearly mention:\n- The company or companies involved\n- The type of event (e.g., acquisition, regulation, product launch, earnings, legal action)\n- The likely business or market impact\n\nTitle: {{$json[\"title\"]}}\n\nContent: {{$json[\"content\"] || $json[\"description\"]}}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxOutputTokens": 300,
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        32
+      ],
+      "id": "95d7a959-53f4-4a82-9ca8-08e5ac2f532b",
+      "name": "Summarize",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KKILXWjex6AWPrae",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0a804e6-4ae4-46f1-99ab-bff358611ff7",
+              "name": "market_summary",
+              "value": "={{$json[\"content\"][\"parts\"][0][\"text\"]}}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        496,
+        32
+      ],
+      "id": "f75eb219-beb1-4121-843e-de8a91c5f2bd",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cbef958f-53b8-4735-9f25-7ef95aaa72e2",
+              "leftValue": "={{$json[\"risk_level\"]}}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1152,
+        32
+      ],
+      "id": "a6d676c9-ed11-48e4-ae35-9935a406378e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an information extraction engine.\n\nYour task is to analyze the market summary and populate the variables below.\n\nReturn ONLY a valid JSON object.\nDo NOT include any text before or after the JSON.\nDo NOT include the word \"json\".\nDo NOT include explanations.\n\nRules:\n- Use lowercase values only where specified.\n- If a value is not mentioned or cannot be inferred, use null.\n- Do not invent company names or competitors.\n\nOutput schema (must match exactly):\n\n{\n  \"company\": null,\n  \"competitors\": [],\n  \"event_category\": \"acquisition | regulation | product_launch | earnings | legal | macro | partnership | other\",\n  \"risk_level\": \"low | medium | high\",\n  \"opportunity_level\": \"low | medium | high\"\n}\n\nMarket summary:\n{{$json[\"market_summary\"]}}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        656,
+        32
+      ],
+      "id": "d0755375-4186-4e93-9ecf-4f50c697c3c8",
+      "name": "Extract ",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KKILXWjex6AWPrae",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawText = $json.content.parts[0].text;\n\n// Extract JSON safely\nconst start = rawText.indexOf('{');\nconst end = rawText.lastIndexOf('}');\n\nif (start === -1 || end === -1) {\n  throw new Error('No JSON object found in LLM output');\n}\n\nconst jsonString = rawText.slice(start, end + 1);\n\n// Parse JSON\nconst data = JSON.parse(jsonString);\n\n// Return clean variables\nreturn [\n  {\n    company: data.company ?? null,\n    competitors: data.competitors ?? [],\n    event_category: data.event_category ?? null,\n    risk_level: data.risk_level ?? null,\n    opportunity_level: data.opportunity_level ?? null\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        32
+      ],
+      "id": "fa3dc5cd-824a-4cdb-b019-c3e14f81434f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "anshuman.pandey28122005@gmail.com",
+        "subject": "DOOM!",
+        "message": "=A high-risk market event has been detected.  Company: {{$json.company || \"N/A\"}} Event Category: {{$json.event_category}} Risk Level: {{$json.risk_level}} Opportunity Level: {{$json.opportunity_level}}  Summary: {{$node[\"Summarize\"].json[\"content\"][\"parts\"][0][\"text\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1328,
+        -96
+      ],
+      "id": "c93e0f47-ffcd-4f1d-903c-f43a1216a7c3",
+      "name": "Send a message",
+      "webhookId": "3adcd351-eb75-47c2-8272-e93631e78829",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "BdUszOKNY6VswbnU",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1wHfXMa54XohGEaLZO387HwmdwVl5iOCJwhWqQ_OlLfo",
+          "mode": "list",
+          "cachedResultName": "N8N1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wHfXMa54XohGEaLZO387HwmdwVl5iOCJwhWqQ_OlLfo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wHfXMa54XohGEaLZO387HwmdwVl5iOCJwhWqQ_OlLfo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{$now}}\n",
+            "URL": "={{$node[\"RSS Feed Trigger\"].json[\"link\"]}}\n",
+            "Summary ": "={{$node[\"Summarize\"].json[\"content\"][\"parts\"][0][\"text\"]}}\n",
+            "Opportunity ": "={{$json.opportunity_level}}\n",
+            "Risk ": "={{$json.risk_level}}\n",
+            "Event ": "={{$json.event_category}}\n",
+            "Company ": "={{$json.company}}\n",
+            "Source ": "RSS"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source ",
+              "displayName": "Source ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company ",
+              "displayName": "Company ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Event ",
+              "displayName": "Event ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Risk ",
+              "displayName": "Risk ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Opportunity ",
+              "displayName": "Opportunity ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary ",
+              "displayName": "Summary ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        80
+      ],
+      "id": "f0fd31ab-b961-48fd-9315-9aff71dfbe21",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qHMOLYudEk8k6CrF",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sevenDaysAgo = new Date();\nsevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);\n\nreturn items.filter(item => {\n  const rowDate = new Date(item.json.Date);\n  return rowDate >= sevenDaysAgo;\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        272
+      ],
+      "id": "6fc26dc2-73ff-4c88-bb8b-29bcd6c2df10",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a market intelligence analyst.\n\nGiven the list of market events from the last 7 days, write a one-page weekly intelligence brief.\n\nInstructions:\n- Group key developments by company and industry\n- Highlight major risks and opportunities\n- Emphasize trends, not individual headlines\n- Use professional business language\n- Keep it concise and executive-ready\n\nMarket events:\n{{$json.weekly_events}}\n",
+              "role": "model"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        272
+      ],
+      "id": "405504d4-7e5c-481c-a108-cc323583d644",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KKILXWjex6AWPrae",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ebe14450-7ae8-48e6-8758-814a88fed616",
+              "name": "weekly_events",
+              "value": "={{$items().map(i =>\n  `Company: ${i.json.Company || \"N/A\"}\nEvent: ${i.json.Event}\nRisk: ${i.json.Risk}\nOpportunity: ${i.json.Opportunity}\nSummary: ${i.json.Summary}\nURL: ${i.json.URL}\n`\n).join(\"\\n---\\n\")}}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        272
+      ],
+      "id": "e4f7338e-cc02-4947-aa5c-bc6acd02d25c",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1wHfXMa54XohGEaLZO387HwmdwVl5iOCJwhWqQ_OlLfo",
+          "mode": "list",
+          "cachedResultName": "N8N1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wHfXMa54XohGEaLZO387HwmdwVl5iOCJwhWqQ_OlLfo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wHfXMa54XohGEaLZO387HwmdwVl5iOCJwhWqQ_OlLfo/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        272
+      ],
+      "id": "8f67059a-32c3-4877-82a1-108fb3fdec0b",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "qHMOLYudEk8k6CrF",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        272
+      ],
+      "id": "3d2ce71b-3bb4-40d1-a4e4-57e461bed60d",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "RSS Feed Trigger": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Extract ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract ": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "5f7ee7bd-5aaa-49e6-8976-58ca60036a83",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a71e22618fa32ff6ba06f8d00e550e805b60eaa7ff7eb5dfba0eb940e17db902"
+  },
+  "id": "Cj3OvkZPhlK0XBYUo9813",
+  "tags": []
+}
